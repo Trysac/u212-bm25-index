@@ -1,24 +1,16 @@
-"""
-Incremental BM25 index with add, update and remove, multilingual analysis with diacritic folding and
-CJK bigrams, and atomic JSON persistence without pickle
-"""
+"""Incremental BM25 index with multilingual analysis and safe persistence."""
 
 from __future__ import annotations
 
-__all__ = ["__version__", "normalize"]
+import logging
+
+from .analyzer import Analyzer
+from .errors import Bm25Error
+from .index import BM25Index, Hit
+
+__all__ = ["Analyzer", "BM25Index", "Bm25Error", "Hit", "__version__"]
 
 __version__ = "0.1.0"
 
-
-def normalize(value: str) -> str:
-    """Return ``value`` trimmed and lower-cased.
-
-    Placeholder API created by the template: replace it with the utility's real behavior.
-
-    Raises:
-        ValueError: if ``value`` is empty or only whitespace.
-    """
-    cleaned = value.strip()
-    if not cleaned:
-        raise ValueError("value must not be empty")
-    return cleaned.lower()
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())

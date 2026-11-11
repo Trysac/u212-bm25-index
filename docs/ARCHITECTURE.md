@@ -1,29 +1,26 @@
 # Architecture
 
-## Purpose
+## Overview
 
-`trysac-bm25-index` is a small, dependency-free Python library: Incremental BM25 index with add, update and remove, multilingual analysis with diacritic folding and CJK bigrams, and atomic JSON persistence without pickle
+The library is split into three core modules:
 
-## Shape
+- `bm25_index.errors`: `Bm25Error` with stable machine-readable codes.
+- `bm25_index.analyzer`: `Analyzer` implements the text normalization and tokenization pipeline.
+- `bm25_index.index`: `BM25Index` maintains incremental statistics, scoring, and persistence.
 
-```text
-caller code --> bm25_index (public API in __init__.py)
-                    |
-                    +-- pure functions, no I/O, no global state
-```
+## Design Decisions
 
-- **Public API**: the names listed in `__all__` of `src/bm25_index/__init__.py`. Anything else is
-  internal and may change without a major version.
-- **Errors**: invalid input raises built-in exceptions (`ValueError`, `TypeError`) with a clear
-  message; the library never prints or exits.
-- **Side effects**: none. If a feature needs I/O, isolate it in its own module behind a small
-  interface and record the choice in an ADR.
+1. **Incremental statistics**: Postings, document lengths and total length are updated on each `add`/`remove`. This avoids rebuilding the index and supports updates by first removing old statistics.
+2. **CJK-aware analysis**: Tokens consisting entirely of CJK characters (Han, Hiragana, Katakana, Hangul) are converted to overlapping bigrams when `cjk_bigrams=True`. Mixed tokens are split at script boundaries.
+3. **Safe persistence**: JSON is used instead of pickle. Files are written atomically via `tempfile` + `os.replace` and validated on load, including size limit and structural checks.
+4. **Validation limits**: Document IDs (1-256 chars), text (1e6 chars), query (1e4 chars), k (1-1000), max_docs. Oversized inputs raise `input_too_large`, invalid identifiers raise `invalid_id`, etc.
 
-## Quality contract
+## Data Flow
 
-`scripts/check.py` is the single definition of the gates; `fabrica.json` tells the factory and CI
-how to run it. See [TESTING.md](TESTING.md).
+1. `add(doc_id, text)` validates inputs, removes old stats if the ID exists, analyzes text into tokens, updates `_doc_lengths`, `_total_length` and `_postings`.
+2. `search(query, k)` analyzes the query, computes IDF for each term, accumulates scores for matching documents, sorts by score then doc ID, and returns top-k results with positive scores.
+3. `save(path)` serializes the index state to a sorted JSON structure; `load(path)` validates and reconstructs the in-memory structures.
 
-## Decisions
+## Threat Model
 
-Architecture decisions are recorded in [decisions/](decisions/) as numbered ADRs.
+This is not a security library; however, inputs are untrusted and are bounded as described above. JSON is parsed with `json.loads` after a size check, and all fields are validated. No code execution is possible through loading because pickle is never used.

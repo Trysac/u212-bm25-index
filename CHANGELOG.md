@@ -9,4 +9,5 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Added incremental BM25 index with multilingual analysis (diacritic folding, CJK bigrams), atomic JSON persistence, and validation limits.
 - Initial project structure from the factory utility template.
