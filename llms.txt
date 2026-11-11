@@ -1,0 +1,16 @@
+# bm25-index
+
+> Incremental BM25 index with add, update and remove, multilingual analysis with diacritic folding and CJK bigrams, and atomic JSON persistence without pickle Python package `trysac-bm25-index`, import name `bm25_index`, MIT licensed,
+> Python >= 3.10, no runtime dependencies.
+
+## Docs
+
+- [README](README.md): problem, install, usage example
+- [AGENTS](AGENTS.md): commands, folder map, conventions, limits
+- [Architecture](docs/ARCHITECTURE.md): shape of the package and its public API
+- [Testing](docs/TESTING.md): how to run and extend the tests
+
+## Optional
+
+- [Stack](docs/STACK.md): tools used and discarded
+- [Changelog](CHANGELOG.md): release history
