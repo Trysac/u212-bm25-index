@@ -1,48 +1,41 @@
-# bm25-index
+# trysac-bm25-index
 
-[![PyPI version](https://img.shields.io/pypi/v/trysac-bm25-index)](https://pypi.org/project/trysac-bm25-index/)
-[![License: MIT](https://img.shields.io/pypi/l/trysac-bm25-index)](LICENSE)
-[![CI](https://github.com/Trysac/u212-bm25-index/actions/workflows/ci.yml/badge.svg)](https://github.com/Trysac/u212-bm25-index/actions/workflows/ci.yml)
+`trysac-bm25-index` is an incremental Okapi BM25 ranking library for Python. It supports adding, updating and removing documents on the fly, multilingual text analysis with diacritic folding and CJK bigrams, and safe, inspectable JSON persistence (no pickle).
 
-Incremental BM25 index with add, update and remove, multilingual analysis with diacritic folding and CJK bigrams, and atomic JSON persistence without pickle
+## Features
 
-## Problem
+- Incremental postings: `add` / `remove` / update a document without rebuilding the whole index.
+- Multilingual analysis: NFKC and casefold; optional diacritic folding; CJK script detection with overlapping bigrams for Chinese, Japanese and Korean text.
+- Okapi BM25 scoring with Lucene's non-negative IDF.
+- Atomic JSON save/load with validation and size limits.
+- Typed, dependency-free (Python >= 3.10).
 
-Describe in two or three sentences the concrete problem this utility solves, who hits it, and what
-they do today without it. Replace this paragraph when the first real feature lands.
+## Installation
 
-## Install
-
-```sh
+```bash
 pip install trysac-bm25-index
-# or
-uv add trysac-bm25-index
 ```
-
-Requires Python 3.10 or newer. No runtime dependencies.
 
 ## Usage
 
 ```python
-import bm25_index
+from bm25_index import Analyzer, BM25Index
 
-# normalize() trims surrounding whitespace and lower-cases the text.
-print(bm25_index.normalize("  Hello World "))  # -> "hello world"
+analyzer = Analyzer(stopwords=frozenset({"the"}))
+index = BM25Index(analyzer)
+index.add("a", "the quick brown fox")
+index.add("b", "the lazy dog")
+index.add("c", "quick quick dog")
 
-# Blank input is rejected explicitly instead of returning an empty string.
-try:
-    bm25_index.normalize("   ")
-except ValueError as exc:
-    print(f"rejected: {exc}")
+hits = index.search("quick dog", k=10)
+print(hits)  # [Hit(doc_id='c', score=1.071...), ...]
+
+index.save("index.json")
+loaded = BM25Index.load("index.json")
 ```
 
-## Documentation
+See the [API documentation](https://pypi.org/project/trysac-bm25-index/) for details.
 
-- [Architecture](docs/ARCHITECTURE.md) and [decisions](docs/decisions/)
-- [Testing](docs/TESTING.md) and [security](docs/SECURITY.md)
-- [Project record](docs/PROJECT.md) and [stack](docs/STACK.md)
-- [Changelog](CHANGELOG.md) and [contributing guide](CONTRIBUTING.md)
+## Development
 
-## License
-
-[MIT](LICENSE) (c) 2026 Miguel Gomez
+This project uses `uv` for dependency management and gate checks. See `AGENTS.md` for commands.
